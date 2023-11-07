@@ -17,6 +17,7 @@ def query_option_chain(ticker: str) -> tuple:
     option_chain = security.option_chain(date=expiries[0])
     return (option_chain.calls, option_chain.puts)
 
+# creates PDF from KDE given samples
 def generate_kde(data, show_plot=False):
     min_return = data.min()
     max_return = data.max()
@@ -27,11 +28,13 @@ def generate_kde(data, show_plot=False):
         plt.show()
     return kde
 
+# creates profit function given distribution
 def pdf_creator(kde: gaussian_kde, strike: float, spot: float):
     def pdf(x):
         return kde.evaluate(x) * max(0, spot * math.exp(x) - strike)
     return pdf
 
+# buckets data by spot vix level
 def vix_parametrize(data):
     start_date = data.index[0]
     vix = g_vix[start_date:]
@@ -55,6 +58,6 @@ if __name__ == "__main__":
     for group in svxy_vix_parametrized_returns:
         if (len(group) > 30):
             svxy_kdes.append(generate_kde(pd.Series(group)))
-    svxy_pdf = pdf_creator(svxy_kdes[1], 80, 80.07)
+    svxy_pdf = pdf_creator(svxy_kdes[1], 79, 80.07)
     result, error = quad(svxy_pdf, -2, 2)
     print(result, error)
