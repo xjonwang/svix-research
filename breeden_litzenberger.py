@@ -17,7 +17,43 @@ def pdf_from_IV(strikes, vols, S, t, r):
     """
     vol_surface = interp1d(strikes, vols, kind="cubic", fill_value="extrapolate")
     strike_range = np.arange(strikes.min(), strikes.max(), 0.1)
+    plot_vol_smile(strikes, vols, strike_range, vol_surface, S)
     return (strike_range, pdf2(Krange=strike_range, S=S, vol_surface=vol_surface, t=t, r=r), black_scholes_call(S, strike_range, vol_surface(strike_range), t, r))
+
+def plot_vols(strikes, vols, S):
+    plt.plot(strikes, vols, "bx")
+    plt.axvline(S, color="k", linestyle="--")
+    plt.legend(["smoothed IV"], loc="best")
+    plt.xlabel("Strike")
+    plt.ylabel("IV")
+    plt.tight_layout()
+    plt.show()
+
+def plot_vol_smile(strikes, vols, Krange, vol_surface, S):
+    plt.plot(strikes, vols, "bx", Krange, vol_surface(Krange), "k-")
+    plt.axvline(S, color="k", linestyle="--")
+    plt.legend(["smoothed IV", "fitted smile"], loc="best")
+    plt.xlabel("Strike")
+    plt.ylabel("IV")
+    plt.tight_layout()
+    plt.show()
+
+def plot_pdf_and_prices(Krange, prices, pdf, S):
+    print(pdf)
+    fig, ax1 = plt.subplots(figsize=(9,6))
+    col="blue"
+    ax1.set_xlabel('Strike')
+    ax1.set_ylabel('Call price', color=col)
+    ax1.plot(Krange, prices, color=col)
+    ax1.tick_params(axis='y', labelcolor=col)
+    ax1.axvline(S, color="k", linestyle="--")
+    ax2 = ax1.twinx()
+    col="red"
+    ax2.set_ylabel('f(K)', color=col)
+    ax2.plot(Krange, pdf, color=col)
+    ax2.tick_params(axis='y', labelcolor=col)
+    fig.tight_layout()
+    plt.show()
     
 
 if __name__ == "__main__":
@@ -30,19 +66,7 @@ if __name__ == "__main__":
     calls.iv = gaussian_filter1d(calls.iv, 3)
     calls = calls[(calls.strike > 300) & (calls.strike < 375)]
 
-    strikes, pdf, prices = pdf_from_IV(calls.strike, calls.iv, S = 332, t = 3/52, r = 0)
+    Krange, pdf, prices = pdf_from_IV(calls.strike, calls.iv, S = 332, t = 3/52, r = 0)
 
-    fig, ax1 = plt.subplots(figsize=(9,6))
-    col="blue"
-    ax1.set_xlabel('Strike')
-    ax1.set_ylabel('Call price', color=col)
-    ax1.plot(strikes, prices, color=col)
-    ax1.tick_params(axis='y', labelcolor=col)
-    ax1.axvline(332, color="k", linestyle="--")
-    ax2 = ax1.twinx()
-    col="red"
-    ax2.set_ylabel('f(K)', color=col)
-    ax2.plot(strikes, pdf, color=col)
-    ax2.tick_params(axis='y', labelcolor=col)
-    fig.tight_layout()
-    plt.show()
+    plot_pdf_and_prices(Krange, prices, pdf, 332)
+    
